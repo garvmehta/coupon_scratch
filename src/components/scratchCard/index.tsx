@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { Animated, Dimensions, Easing, Image, ImageBackground, ImageSourcePropType, ImageStyle, StyleSheet, View, ViewStyle } from 'react-native'
+import { Animated, Dimensions, Easing, Image, ImageBackground, ImageSourcePropType, ImageStyle, Platform, StyleSheet, View, ViewStyle } from 'react-native'
 import { ScratchCard } from 'rn-scratch-card'
 interface ScratchingCardPropType {
     width: number,
@@ -23,7 +23,9 @@ const ScratchingCard = (props: ScratchingCardPropType) => {
             ...props.containerStyle
         }
     }, [props.height, props.width, props.containerStyle])
-    
+    const brushSize = useMemo(()=>{
+        return (Platform.OS == 'ios')?50:20;
+    },[])
     const bgSize: ViewStyle = useMemo(() => {
         return {
             width: props.width * 0.75,
@@ -41,18 +43,15 @@ const ScratchingCard = (props: ScratchingCardPropType) => {
             }),
             Animated.timing(scale, {
                 toValue: 1.4,
-                duration: 1000,
+                duration: 500,
                 useNativeDriver: true,
 
             })
-        ]).start(() => {
-            cardRef.current.setNativeProps({ style: { display: 'none' } });
-            console.log('Done...')
-        });
+        ]).start();
 
     };
     function handleScratch(scratchPercentage: number) {
-        console.log(scratchPercentage)
+        
         if (scratchPercentage >= 40) {
             bounce();
         }
@@ -67,12 +66,12 @@ const ScratchingCard = (props: ScratchingCardPropType) => {
                 <Animated.View style={[styles.background_view, bgSize as ImageStyle, { borderRadius: borderRadius, transform: [{ scale: scale }] }]}>
                     <Image source={backgroundImage} style={ [styles.cardImg, {borderRadius: borderRadius},]} />
                 </Animated.View>
-                <Animated.View style={{ opacity: fadeAnim }} ref={cardRef} >
+                <Animated.View style={{ opacity: fadeAnim, borderRadius, overflow:'hidden' }} ref={cardRef} >
                     <ScratchCard
                         source={foregroundImage}
-                        brushWidth={50}
+                        brushWidth={brushSize}
                         onScratch={handleScratch}
-                        style={{ ...styles.scratch_card, ...bgSize, borderRadius }}
+                        style={{ ...styles.scratch_card,...bgSize, borderRadius:borderRadius }}
                     />
                 </Animated.View>
             </View>
@@ -91,24 +90,26 @@ const styles = StyleSheet.create({
     },
     background_view: {
         position: 'absolute',
-        backgroundColor: 'transparent',
+        backgroundColor: 'white',
         alignSelf: 'center',
-        shadowColor: "#000",
+        shadowColor: "#000000",
         shadowOffset: {
             width: 0,
             height: 1,
         },
         shadowOpacity: 0.22,
         shadowRadius: 2.22,
-        elevation: 3,
+        
     },
     scratch_card_container: {
         backgroundColor: 'transparent',
         overflow: 'hidden'
     },
     scratch_card: {
-        backgroundColor: 'transparent',
-        overflow: 'hidden'
+        backgroundColor:'transparent',
+        width:'100%',
+        height:'100%',
+        
     },
     cardImg: {
         width: '100%',
